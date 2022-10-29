@@ -3,6 +3,9 @@ import { Component } from 'react';
 import * as ImageService from 'service/image-service';
 import { Button, SearchForm, Grid, GridItem, Text, CardItem } from 'components';
 
+import { Blocks } from 'react-loader-spinner';
+// import 'react-loader-spinner/dist/loader/css/react-spinner-loader.css';
+
 export class Gallery extends Component {
   state = {
     gallery: [],
@@ -11,6 +14,7 @@ export class Gallery extends Component {
     isVisible: false,
     error: '',
     isEmpty: false,
+    isLoading: false,
   };
 
   getData = query => {
@@ -26,7 +30,9 @@ export class Gallery extends Component {
 
   componentDidUpdate(_, prevState) {
     const { query, page } = this.state;
+
     if (prevState.query !== query || prevState.page !== page) {
+      this.setState({ isLoading: true });
       ImageService.getImages(query, page)
         .then(data => {
           if (data.photos.length === 0) {
@@ -40,7 +46,8 @@ export class Gallery extends Component {
         })
         .catch(error => {
           this.setState({ error: error.message });
-        });
+        })
+        .finally(this.setState({ isLoading: false }));
     }
   }
 
@@ -60,6 +67,14 @@ export class Gallery extends Component {
         {this.state.isEmpty && (
           <Text textAlign="center">Sorry. There are no images ... 😭</Text>
         )}
+        <Blocks
+          visible={this.state.isLoading}
+          height="80"
+          width="80"
+          ariaLabel="blocks-loading"
+          wrapperStyle={{}}
+          wrapperClass="blocks-wrapper"
+        />
         <Grid>
           {this.state.gallery.map(image => {
             return (
@@ -71,6 +86,7 @@ export class Gallery extends Component {
             );
           })}
         </Grid>
+
         {this.state.isVisible && (
           <Button onClick={this.onLoadMore}>Load more</Button>
         )}
